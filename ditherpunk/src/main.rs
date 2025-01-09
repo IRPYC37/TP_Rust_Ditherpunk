@@ -1,9 +1,8 @@
 use argh::FromArgs;
 
-#[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
+#[derive(Debug, Clone, PartialEq, FromArgs)]
 struct DitherArgs {
-
     /// le fichier d’entrée
     #[argh(positional)]
     input: String,
@@ -14,34 +13,28 @@ struct DitherArgs {
 
     /// le mode d’opération
     #[argh(subcommand)]
-    mode: Mode
+    mode: Mode,
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand)]
 enum Mode {
+    /// Mode de rendu monochrome par seuillage.
     Seuil(OptsSeuil),
+    /// Mode de réduction à une palette de couleurs.
     Palette(OptsPalette),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="seuil")]
+#[argh(subcommand, name = "seuil")]
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
 
-
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="palette")]
-/// Rendu de l’image avec une palette contenant un nombre limité de couleurs
+#[argh(subcommand, name = "palette")]
+/// Rendu de l’image avec une palette contenant un nombre limité de couleurs.
 struct OptsPalette {
-
     /// le nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, ROUGE, VERT, BLEU, JAUNE, CYAN, MAGENTA]
     #[argh(option)]
-    n_couleurs: usize
-}
-
-fn main() {
-    let args: DitherArgs = argh::from_env();
-    let path_in = args.input;
-    Ok(())
+    n_couleurs: usize,
 }
