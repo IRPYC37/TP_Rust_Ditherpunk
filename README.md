@@ -11,7 +11,14 @@
 
   Avec cette bibliothèque, on peut gérer plusieurs formats d'images sans avoir à spécifier le type exact au moment de la lecture.
 
+  ### Question 3 - Sauver l’image obtenue au format png. Que se passe-t-il si l’image de départ avait un canal alpha?
 
+  Pour sauvegarder l'image, on utilise : 
+  ```rgb_image.save("image.png")?;```
+
+  Si l'image d'origine contient un canal alpha (transparence), celui-ci est perdu lorsque l'image est convertie en rgb8, car rgb8 ne conserve que 3 canaux (Rouge, Vert, Bleu), alors qu'une image avec transparence utilise 4 canaux (Rouge, Vert, Bleu, Alpha).
+
+Par conséquent, les zones transparentes de l'image d'origine seront remplacées par du noir ou une couleur arbitraire dans l'image en rgb8. Donc toute information liée à la transparence est irrémédiablement perdue lors de la conversion.
 
 ## Liens utiles :
 
