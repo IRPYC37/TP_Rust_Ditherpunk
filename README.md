@@ -79,6 +79,57 @@ Enfin pour répondre à la question, "Est-ce que l’image obtenue est reconnais
 **Image en sortie :**
 ![image](/ditherpunk/output_Q5.png)
 
+### Question 12 - Implémenter le tramage aléatoire des images.
+
+Pour faire un tramage aléatoire sur une image, voici le code rust que nous avons utiliser :
+
+```rust
+// Charger l'image
+let image = ImageReader::open("image.png")?.decode()?;
+//
+// image en mode rgb8
+let mut rgb_image = image.to_rgb8();
+//
+// Obtenir les dimensions de l'image
+let (width, height) = rgb_image.dimensions();
+//
+// Initialiser un générateur de nombres aléatoires
+let mut rng = rand::thread_rng();
+//
+// fait le tramage aléatoire
+for y in 0..height {
+    for x in 0..width {
+        let pixel = rgb_image.get_pixel(x, y);
+//
+        // calculer la luminosité (moyenne des canaux R, G, B)
+        let lumi = (pixel[0] as u32 + pixel[1] as u32 + pixel[2] as u32) as f64 / 3.0 / 255.0;
+//
+        // aléatoire entre 0 et 1
+        let rdm_seuil: f64 = rng.gen();
+//
+        if lumi > rdm_seuil {
+            // en blanc
+            rgb_image.put_pixel(x, y, image::Rgb([255, 255, 255]));
+        } else {
+            // en noir
+            rgb_image.put_pixel(x, y, image::Rgb([0, 0, 0]));
+        }
+    }
+}
+//
+// image modifiée
+rgb_image.save("output_Q12.png")?;
+//
+println!("Image sauvegardée (output_Q12.png).");
+Ok(())
+```
+
+**Image d'origine :**
+![image](/ditherpunk/image.png)
+
+**Image en sortie :**
+![image](/ditherpunk/output_Q12.png)
+
 ## Liens utiles :
 
   Inspiration du TP : https://surma.dev/things/ditherpunk/

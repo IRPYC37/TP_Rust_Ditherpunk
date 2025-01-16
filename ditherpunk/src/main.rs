@@ -1,5 +1,6 @@
 use argh::FromArgs;
-use image::io::Reader as ImageReader;
+use image::{io::Reader as ImageReader};
+use rand::Rng; // Pour générer des nombres aléatoires
 
 
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -87,6 +88,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //println!("image sauvegardée (output_Q5.png).");
     //Ok(())
 
-    
+    //Question 12
+    //
+    // Charger l'image
+    //let image = ImageReader::open("image.png")?.decode()?;
+    //
+    // image en mode rgb8
+    //let mut rgb_image = image.to_rgb8();
+    //
+    // Obtenir les dimensions de l'image
+    //let (width, height) = rgb_image.dimensions();
+    //
+    // Initialiser un générateur de nombres aléatoires
+    //let mut rng = rand::thread_rng();
+    //
+    // fait le tramage aléatoire
+    //for y in 0..height {
+    //    for x in 0..width {
+    //       let pixel = rgb_image.get_pixel(x, y);
+    //
+            // calculer la luminosité (moyenne des canaux R, G, B)
+    //        let lumi = (pixel[0] as u32 + pixel[1] as u32 + pixel[2] as u32) as f64 / 3.0 / 255.0;
+    //
+            // aléatoire entre 0 et 1
+    //        let rdm_seuil: f64 = rng.gen();
+    //
+    //        if lumi > rdm_seuil {
+                // en blanc
+    //            rgb_image.put_pixel(x, y, image::Rgb([255, 255, 255]));
+    //        } else {
+                // en noir
+    //            rgb_image.put_pixel(x, y, image::Rgb([0, 0, 0]));
+    //        }
+    //    }
+    //}
+    //
+    // image modifiée
+    //rgb_image.save("output_Q12.png")?;
+    //
+    //println!("Image sauvegardée (output_Q12.png).");
+    //Ok(())
 
 }
