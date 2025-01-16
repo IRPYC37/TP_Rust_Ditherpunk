@@ -1,4 +1,6 @@
 use argh::FromArgs;
+use image::io::Reader as ImageReader;
+
 
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -37,4 +39,54 @@ struct OptsPalette {
     /// le nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, ROUGE, VERT, BLEU, JAUNE, CYAN, MAGENTA]
     #[argh(option)]
     n_couleurs: usize,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    // Question 4 :
+    //
+    // Charger l'image depuis un fichier
+    //let image = ImageReader::open("image.png")?.decode()?;
+    //
+    // Convertir l'image en mode rgb8 pour travailler avec des pixels RGB
+    //let rgb_image = image.to_rgb8();
+    //
+    // Obtenir la couleur du pixel à la position (32, 52)
+    //let pixel = rgb_image.get_pixel(32, 52);
+    //
+    // Afficher la couleur du pixel (R, G, B)
+    //println!("La couleur du pixel (32, 52) est : R={}, G={}, B={}", pixel[0], pixel[1], pixel[2]);
+    //
+    //Ok(())
+
+
+    // Question 5 :
+    //
+    // Charge l'image
+    //let image = ImageReader::open("image.png")?.decode()?;
+    //
+    // Convertir l'image en mode rgb8
+    //let mut rgb_image = image.to_rgb8();
+    //
+    // Obtenir les dimensions de l'image
+    //let (width, height) = rgb_image.dimensions();
+    //
+    // Parcours les pixels de l'image
+    //for y in 0..height {
+    //    for x in 0..width {
+    //        if (x + y) % 2 == 0 {
+    //            // Passage des piexls en blanc
+    //            rgb_image.put_pixel(x, y, image::Rgb([255, 255, 255]));
+    //        }
+    //    }
+    //}
+    //
+    // Sauvegarder l'image modifiée
+    //rgb_image.save("output_Q5.png")?;
+    //
+    //println!("image sauvegardée (output_Q5.png).");
+    //Ok(())
+
+    
+
 }
