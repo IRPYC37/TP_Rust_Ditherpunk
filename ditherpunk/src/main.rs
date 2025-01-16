@@ -171,7 +171,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //Question 12
     //
     // Charger l'image
-    //let image = ImageReader::open("image.png")?.decode()?;
+    //let image = ImageReader::open("image/image.png")?.decode()?;
     //
     // image en mode rgb8
     //let mut rgb_image = image.to_rgb8();
@@ -204,9 +204,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //}
     //
     // image modifiée
-    //rgb_image.save("output_Q12.png")?;
+    //rgb_image.save("image/output_Q12.png")?;
     //
-    //println!("Image sauvegardée (output_Q12.png).");
+    //println!("Image sauvegardée (image/output_Q12.png).");
     //Ok(())
 
 }

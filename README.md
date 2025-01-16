@@ -121,7 +121,7 @@ Pour faire un tramage aléatoire sur une image, voici le code rust que nous avon
 
 ```rust
 // Charger l'image
-let image = ImageReader::open("image.png")?.decode()?;
+let image = ImageReader::open("image/image.png")?.decode()?;
 //
 // image en mode rgb8
 let mut rgb_image = image.to_rgb8();
@@ -154,9 +154,9 @@ for y in 0..height {
 }
 //
 // image modifiée
-rgb_image.save("output_Q12.png")?;
+rgb_image.save("image/output_Q12.png")?;
 //
-println!("Image sauvegardée (output_Q12.png).");
+println!("Image sauvegardée (image/output_Q12.png).");
 Ok(())
 ```
 
