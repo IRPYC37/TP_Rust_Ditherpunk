@@ -2,8 +2,8 @@ use argh::FromArgs;
 use image::{RgbImage, Rgb};
 use image::io::Reader as ImageReader;
 
-#[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
+#[derive(Debug, Clone, PartialEq, FromArgs)]
 struct DitherArgs {
     /// le fichier d’entrée
     #[argh(positional)]
@@ -21,12 +21,14 @@ struct DitherArgs {
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand)]
 enum Mode {
+    /// Mode de rendu monochrome par seuillage.
     Seuil(OptsSeuil),
+    /// Mode de réduction à une palette de couleurs.
     Palette(OptsPalette),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="seuil")]
+#[argh(subcommand, name = "seuil")]
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {
     /// couleur pour les pixels sombres (format R,G,B)
@@ -39,8 +41,8 @@ struct OptsSeuil {
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="palette")]
-/// Rendu de l’image avec une palette contenant un nombre limité de couleurs
+#[argh(subcommand, name = "palette")]
+/// Rendu de l’image avec une palette contenant un nombre limité de couleurs.
 struct OptsPalette {
     /// le nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, ROUGE, VERT, BLEU, JAUNE, CYAN, MAGENTA]
     #[argh(option)]
@@ -88,16 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match args.mode {
         Mode::Seuil(opts) => {
 
-            // Passer un pixel sur deux en blanc
-            let mut new_image = rgb_image.clone();
-            for (x, y, pixel) in new_image.enumerate_pixels_mut() {
-                if (x + y) % 2 == 0 {
-                    *pixel = Rgb([255, 255, 255]);
-                }
-            }
-            new_image.save("./image/Question7.png")?;
-
-            // Seuillage en monochrome avec couleurs personnalisées
+            // Seuillage en monochrome avec couleurs personnalisées, questions 7-8
             let dark_color = parse_color(&opts.dark_color);
             let light_color = parse_color(&opts.light_color);
             let mut threshold_image = rgb_image.clone();
@@ -111,6 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             threshold_image.save("./image/Question8.png")?;
         },
+        // Question 10
         Mode::Palette(opts) => {
             let palette = vec![
                 (0, 0, 0), (255, 255, 255), (255, 0, 0), (0, 255, 0),
@@ -127,3 +121,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+// Question 4 :
+    //
+    // Charger l'image depuis un fichier
+    //let image = ImageReader::open("image.png")?.decode()?;
+    //
+    // Convertir l'image en mode rgb8 pour travailler avec des pixels RGB
+    //let rgb_image = image.to_rgb8();
+    //
+    // Obtenir la couleur du pixel à la position (32, 52)
+    //let pixel = rgb_image.get_pixel(32, 52);
+    //
+    // Afficher la couleur du pixel (R, G, B)
+    //println!("La couleur du pixel (32, 52) est : R={}, G={}, B={}", pixel[0], pixel[1], pixel[2]);
+    //
+    //Ok(())
+
+
+    // Question 5 :
+    //
+    // Charge l'image
+    //let image = ImageReader::open("image.png")?.decode()?;
+    //
+    // Convertir l'image en mode rgb8
+    //let mut rgb_image = image.to_rgb8();
+    //
+    // Obtenir les dimensions de l'image
+    //let (width, height) = rgb_image.dimensions();
+    //
+    // Parcours les pixels de l'image
+    //for y in 0..height {
+    //    for x in 0..width {
+    //        if (x + y) % 2 == 0 {
+    //            // Passage des piexls en blanc
+    //            rgb_image.put_pixel(x, y, image::Rgb([255, 255, 255]));
+    //        }
+    //    }
+    //}
+    //
+    // Sauvegarder l'image modifiée
+    //rgb_image.save("output_Q5.png")?;
+    //
+    //println!("image sauvegardée (output_Q5.png).");
+    //Ok(())
