@@ -74,10 +74,46 @@ Ok(())
 Enfin pour répondre à la question, "Est-ce que l’image obtenue est reconnaissable ?", oui elle l'est toujours, l'image semble juste plus "claire"
 
 **Image d'origine :**
-![image](/ditherpunk/image.png)
+![image](/ditherpunk/image/image.png)
 
 **Image en sortie :**
-![image](/ditherpunk/output_Q5.png)
+![image](/ditherpunk/image/output_Q5.png)
+
+
+### Question 7 : Passage en monochrome par seuillage
+
+cargo run -- image/iut.jpg seuil --dark-color 0,0,0 --light-color 255,255,255
+**Image d'origine :**
+![image](/ditherpunk/image/iut.jpg)
+
+**Image en sortie :**
+![image](/ditherpunk/image/Question8.png)
+
+### Question 9 : Comment calculer la distance entre deux couleurs ?
+
+La distance entre deux couleurs peut être mesurée de différentes manières. Une méthode couramment utilisée pour comparer les couleurs est la distance Euclidienne dans l'espace des couleurs RVB (Rouge, Vert, Bleu).
+
+La formule pour la distance Euclidienne entre deux couleurs C1=(R1,G1,B1)C1​=(R1​,G1​,B1​) et C2=(R2,G2,B2)C2​=(R2​,G2​,B2​) est la suivante :
+
+d(C1,C2)=Racine_carré((R1−R2)²+(G1−G2)²+(B1−B2)²)
+
+Cela donne une mesure de la "distance" en termes de différence de teinte, de saturation et de luminosité entre deux couleurs. Plus cette distance est faible, plus les couleurs sont similaires.
+
+### Question 10: Commande à exécuter
+
+
+cargo run -- image/iut.jpg palette --n-couleurs 8
+
+**Image d'origine :**
+![image](/ditherpunk/image/iut.jpg)
+
+**Image en sortie :**
+![image](/ditherpunk/image/Question10.png)
+
+
+### Question 11: Votre application doit se comporter correctement si on donne une palette vide.
+
+Si la palette est vide, chaque pixel est remplacé par la couleur noire par défaut. Cela garantit que l'application ne plante pas et produit une sortie cohérente.
 
 ### Question 12 - Implémenter le tramage aléatoire des images.
 
