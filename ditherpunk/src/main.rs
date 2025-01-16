@@ -27,6 +27,8 @@ enum Mode {
     Seuil(OptsSeuil),
     /// Mode de réduction à une palette de couleurs.
     Palette(OptsPalette),
+    /// Mode de rendu monochrome par tramage aléatoire.
+    RandDither(),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -91,7 +93,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match args.mode {
         Mode::Seuil(opts) => {
-
             // Seuillage en monochrome avec couleurs personnalisées, questions 7-8
             let dark_color = parse_color(&opts.dark_color);
             let light_color = parse_color(&opts.light_color);
@@ -118,11 +119,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 new_image.save("./image/Question10.png")?;
             }
-        }
+        },
+        Mode::RandDither() => {
+            // Tramage aléatoire, question 12
+            let mut rng = rand::thread_rng();
+            let mut dithered_image = rgb_image.clone();
+            for y in 0..height {
+                    for x in 0..width {
+                        let pixel = rgb_image.get_pixel(x, y);
+                        // calculer la luminosité (moyenne des canaux R, G, B)
+                        let lumi = (pixel[0] as u32 + pixel[1] as u32 + pixel[2] as u32) as f64 / 3.0 / 255.0;
+                        // aléatoire entre 0 et 1
+                        let rdm_seuil: f64 = rng.gen();
+                        if lumi > rdm_seuil {
+                            // en blanc
+                            rgb_image.put_pixel(x, y, image::Rgb([255, 255, 255]));
+                        } else {
+                            // en noir
+                            rgb_image.put_pixel(x, y, image::Rgb([0, 0, 0]));
+                        }
+                    }
+                }
+            dithered_image.save("./image/Question12.png")?;
+        },
     }
 
     Ok(())
-}
 
 // Question 4 :
     //
