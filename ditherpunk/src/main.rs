@@ -40,6 +40,10 @@ struct OptsSeuil {
     /// couleur pour les pixels clairs (format R,G,B)
     #[argh(option, default = "String::from(\"255,255,255\")")]
     light_color: String,
+
+    /// ordre de la matrice de Bayer pour le tramage
+    #[argh(option, default = "2")]
+    bayer_order: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -51,12 +55,22 @@ struct OptsPalette {
     n_couleurs: usize,
 }
 
+// Question 8
+fn parse_color(color: &str) -> Rgb<u8> {
+    let parts: Vec<u8> = color.split(',')
+        .map(|s| s.parse().unwrap_or(0))
+        .collect();
+    Rgb([parts[0], parts[1], parts[2]])
+}
+
+// Question 9
 fn distance(c1: (u8, u8, u8), c2: (u8, u8, u8)) -> f64 {
     let (r1, g1, b1) = c1;
     let (r2, g2, b2) = c2;
     (((r1 as f64 - r2 as f64).powi(2) + (g1 as f64 - g2 as f64).powi(2) + (b1 as f64 - b2 as f64).powi(2)) as f64).sqrt()
 }
 
+// Question 10
 fn apply_palette(image: &RgbImage, palette: &[(u8, u8, u8)]) -> RgbImage {
     let mut new_image = RgbImage::new(image.width(), image.height());
 
@@ -76,11 +90,46 @@ fn apply_palette(image: &RgbImage, palette: &[(u8, u8, u8)]) -> RgbImage {
     new_image
 }
 
-fn parse_color(color: &str) -> Rgb<u8> {
-    let parts: Vec<u8> = color.split(',')
-        .map(|s| s.parse().unwrap_or(0))
-        .collect();
-    Rgb([parts[0], parts[1], parts[2]])
+// Question 15
+fn generate_bayer_matrix(order: u32) -> Vec<Vec<u8>> {
+    if order == 0 {
+        return vec![vec![0]];
+    }
+
+    let prev_matrix = generate_bayer_matrix(order - 1);
+    let size = prev_matrix.len();
+    let new_size = size * 2;
+    let mut matrix = vec![vec![0; new_size]; new_size];
+
+    for i in 0..size {
+        for j in 0..size {
+            let value = prev_matrix[i][j];
+            matrix[i][j] = value * 4;
+            matrix[i + size][j] = value * 4 + 2;
+            matrix[i][j + size] = value * 4 + 3;
+            matrix[i + size][j + size] = value * 4 + 1;
+        }
+    }
+
+    matrix
+}
+// Question 15
+fn apply_bayer_dithering(image: &RgbImage, order: u32) -> RgbImage {
+    let bayer_matrix = generate_bayer_matrix(order);
+    let matrix_size = bayer_matrix.len();
+    let mut new_image = RgbImage::new(image.width(), image.height());
+
+    for (x, y, pixel) in image.enumerate_pixels() {
+        let luminance = 0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64;
+        let threshold = bayer_matrix[(x as usize % matrix_size)][(y as usize % matrix_size)] as f64 / (matrix_size * matrix_size) as f64 * 255.0;
+        if luminance > threshold {
+            new_image.put_pixel(x, y, Rgb([255, 255, 255]));
+        } else {
+            new_image.put_pixel(x, y, Rgb([0, 0, 0]));
+        }
+    }
+
+    new_image
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -92,7 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match args.mode {
         Mode::Seuil(opts) => {
 
-            // Seuillage en monochrome avec couleurs personnalisées, questions 7-8
+            // Seuillage en monochrome avec couleurs personnalisées
             let dark_color = parse_color(&opts.dark_color);
             let light_color = parse_color(&opts.light_color);
             let mut threshold_image = rgb_image.clone();
@@ -105,8 +154,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             threshold_image.save("./image/Question8.png")?;
+
+            // Tramage par matrice de Bayer
+            let bayer_image = apply_bayer_dithering(&rgb_image, opts.bayer_order);
+            bayer_image.save("./image/Question15.png")?;
         },
-        // Question 10
         Mode::Palette(opts) => {
             let palette = vec![
                 (0, 0, 0), (255, 255, 255), (255, 0, 0), (0, 255, 0),
@@ -208,6 +260,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //
     //println!("Image sauvegardée (image/output_Q12.png).");
     //Ok(())
-
-}
-
