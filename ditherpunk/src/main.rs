@@ -28,7 +28,15 @@ enum Mode {
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name="seuil")]
 /// Rendu de l’image par seuillage monochrome.
-struct OptsSeuil {}
+struct OptsSeuil {
+    /// couleur pour les pixels sombres (format R,G,B)
+    #[argh(option, default = "String::from(\"0,0,0\")")]
+    dark_color: String,
+
+    /// couleur pour les pixels clairs (format R,G,B)
+    #[argh(option, default = "String::from(\"255,255,255\")")]
+    light_color: String,
+}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name="palette")]
@@ -64,6 +72,13 @@ fn apply_palette(image: &RgbImage, palette: &[(u8, u8, u8)]) -> RgbImage {
     new_image
 }
 
+fn parse_color(color: &str) -> Rgb<u8> {
+    let parts: Vec<u8> = color.split(',')
+        .map(|s| s.parse().unwrap_or(0))
+        .collect();
+    Rgb([parts[0], parts[1], parts[2]])
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: DitherArgs = argh::from_env();
 
@@ -71,8 +86,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rgb_image = img.to_rgb8();
 
     match args.mode {
-        Mode::Seuil(_) => {
-            // Implémentation du mode seuil
+        Mode::Seuil(opts) => {
+
+            // Passer un pixel sur deux en blanc
+            let mut new_image = rgb_image.clone();
+            for (x, y, pixel) in new_image.enumerate_pixels_mut() {
+                if (x + y) % 2 == 0 {
+                    *pixel = Rgb([255, 255, 255]);
+                }
+            }
+            new_image.save("./image/Question7.png")?;
+
+            // Seuillage en monochrome avec couleurs personnalisées
+            let dark_color = parse_color(&opts.dark_color);
+            let light_color = parse_color(&opts.light_color);
+            let mut threshold_image = rgb_image.clone();
+            for pixel in threshold_image.pixels_mut() {
+                let luminance = 0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64;
+                if luminance > 128.0 {
+                    *pixel = light_color;
+                } else {
+                    *pixel = dark_color;
+                }
+            }
+            threshold_image.save("./image/Question8.png")?;
         },
         Mode::Palette(opts) => {
             let palette = vec![
