@@ -282,3 +282,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //
     //println!("Image sauvegardée (image/output_Q12.png).");
     //Ok(())
+
+}
