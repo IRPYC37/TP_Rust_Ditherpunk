@@ -172,6 +172,16 @@ cargo run -- image/iut.jpg randdither
 **Image en sortie :**
 ![image](/ditherpunk/image/output_Q12.png)
 
+
+### Question 15 - Implementation de la matrice de Bayer
+
+cargo run -- image/iut.jpg seuil --bayer-order 3
+**Image d'origine :**
+![image](/ditherpunk/image/iut.jpg)
+
+**Image en sortie :**
+![image](/ditherpunk/image/Question15.png)
+
 ## Liens utiles :
 
   Inspiration du TP : https://surma.dev/things/ditherpunk/
