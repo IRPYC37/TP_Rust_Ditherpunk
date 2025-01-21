@@ -23,21 +23,17 @@ struct DitherArgs {
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand)]
 enum Mode {
-    /// Mode de rendu monochrome par seuillage.
+    /// mode de rendu monochrome par seuillage.
     Seuil(OptsSeuil),
-    /// Mode de réduction à une palette de couleurs.
+    /// mode de réduction à une palette de couleurs.
     Palette(OptsPalette),
-    /// Mode de rendu monochrome par tramage aléatoire.
-    RandDither(),
+    /// mode de rendu monochrome par tramage aléatoire.
+    RandDither(OptsRandDither),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "seuil")]
-/// Rendu de l’image par seuillage monochrome.
-
-#[argh(subcommand, name = "randdither")]
-/// Rendu de l’image par tramage aléatoire.
-
+/// rendu de l’image par seuillage monochrome.
 struct OptsSeuil {
     /// couleur pour les pixels sombres (format R,G,B)
     #[argh(option, default = "String::from(\"0,0,0\")")]
@@ -50,12 +46,17 @@ struct OptsSeuil {
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "palette")]
-/// Rendu de l’image avec une palette contenant un nombre limité de couleurs.
+/// rendu de l’image avec une palette contenant un nombre limité de couleurs.
 struct OptsPalette {
-    /// le nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, ROUGE, VERT, BLEU, JAUNE, CYAN, MAGENTA]
+    /// nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, etc.]
     #[argh(option)]
     n_couleurs: usize,
 }
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "randdither")]
+/// rendu de l’image par tramage aléatoire.
+struct OptsRandDither{}
 
 fn distance(c1: (u8, u8, u8), c2: (u8, u8, u8)) -> f64 {
     let (r1, g1, b1) = c1;
@@ -124,8 +125,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 new_image.save("./image/Question10.png")?;
             }
         },
-        Mode::RandDither() => {
-            // Tramage aléatoire, question 12
+        Mode::RandDither(_) => {
+            // Tramage aléatoire
             let mut rng = rand::thread_rng();
             let mut dithered_image = rgb_image.clone();
             for pixel in dithered_image.pixels_mut() {
@@ -137,8 +138,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     *pixel = Rgb([0, 0, 0]);
                 }
             }
-            dithered_image.save("./image/Question12.png")?;
-        },
+            dithered_image.save("./image/output_Q12.png")?;
+        }
     }
 
     Ok(())
