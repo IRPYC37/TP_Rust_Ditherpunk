@@ -23,15 +23,17 @@ struct DitherArgs {
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand)]
 enum Mode {
-    /// Mode de rendu monochrome par seuillage.
+    /// mode de rendu monochrome par seuillage.
     Seuil(OptsSeuil),
-    /// Mode de réduction à une palette de couleurs.
+    /// mode de réduction à une palette de couleurs.
     Palette(OptsPalette),
+    /// mode de rendu monochrome par tramage aléatoire.
+    RandDither(OptsRandDither),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "seuil")]
-/// Rendu de l’image par seuillage monochrome.
+/// rendu de l’image par seuillage monochrome.
 struct OptsSeuil {
     /// couleur pour les pixels sombres (format R,G,B)
     #[argh(option, default = "String::from(\"0,0,0\")")]
@@ -48,12 +50,18 @@ struct OptsSeuil {
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "palette")]
-/// Rendu de l’image avec une palette contenant un nombre limité de couleurs.
+/// rendu de l’image avec une palette contenant un nombre limité de couleurs.
 struct OptsPalette {
-    /// le nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, ROUGE, VERT, BLEU, JAUNE, CYAN, MAGENTA]
+    /// nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, etc.]
     #[argh(option)]
     n_couleurs: usize,
 }
+
+// Question 12
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "randdither")]
+/// rendu de l’image par tramage aléatoire.
+struct OptsRandDither{}
 
 // Question 8
 fn parse_color(color: &str) -> Rgb<u8> {
@@ -64,6 +72,7 @@ fn parse_color(color: &str) -> Rgb<u8> {
 }
 
 // Question 9
+
 fn distance(c1: (u8, u8, u8), c2: (u8, u8, u8)) -> f64 {
     let (r1, g1, b1) = c1;
     let (r2, g2, b2) = c2;
@@ -140,7 +149,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match args.mode {
         Mode::Seuil(opts) => {
-
             // Seuillage en monochrome avec couleurs personnalisées
             let dark_color = parse_color(&opts.dark_color);
             let light_color = parse_color(&opts.light_color);
@@ -170,11 +178,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 new_image.save("./image/Question10.png")?;
             }
+        },
+        Mode::RandDither(_) => {
+            // Tramage aléatoire
+            let mut rng = rand::thread_rng();
+            let mut dithered_image = rgb_image.clone();
+            for pixel in dithered_image.pixels_mut() {
+                let lumi = (pixel[0] as u32 + pixel[1] as u32 + pixel[2] as u32) as f64 / 3.0 / 255.0;
+                let rdm_seuil = rng.gen::<f64>();
+                if lumi > rdm_seuil {
+                    *pixel = Rgb([255, 255, 255]);
+                } else {
+                    *pixel = Rgb([0, 0, 0]);
+                }
+            }
+            dithered_image.save("./image/output_Q12.png")?;
         }
     }
 
     Ok(())
-}
 
 // Question 4 :
     //

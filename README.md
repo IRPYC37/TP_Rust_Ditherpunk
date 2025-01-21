@@ -160,11 +160,17 @@ println!("Image sauvegardée (image/output_Q12.png).");
 Ok(())
 ```
 
+Pour appliquer un **dither aléatoire**, on utilise la commande suivante :
+
+```bash
+cargo run -- image/iut.jpg randdither
+```
+
 **Image d'origine :**
-![image](/ditherpunk/image.png)
+![image](/ditherpunk/image/iut.jpg)
 
 **Image en sortie :**
-![image](/ditherpunk/output_Q12.png)
+![image](/ditherpunk/image/output_Q12.png)
 
 
 ### Question 15 - Implementation de la matrice de Bayer
