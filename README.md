@@ -182,6 +182,15 @@ cargo run -- image/iut.jpg seuil --bayer-order 3
 **Image en sortie :**
 ![image](/ditherpunk/image/Question15.png)
 
+### Question 16 - Implementation de l'erreur de diffusion (noir et blanc)
+
+cargo run -- image/iut.jpg errordiffusion
+**Image d'origine :**
+![image](/ditherpunk/image/iut.jpg)
+
+**Image en sortie :**
+![image](/ditherpunk/image/Question16.png)
+
 ## Liens utiles :
 
   Inspiration du TP : https://surma.dev/things/ditherpunk/
