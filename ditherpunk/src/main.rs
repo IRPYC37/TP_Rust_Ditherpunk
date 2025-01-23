@@ -29,6 +29,9 @@ enum Mode {
     Palette(OptsPalette),
     /// mode de rendu monochrome par tramage aléatoire.
     RandDither(OptsRandDither),
+
+    /// mode de rendu par diffusion d'erreurs.
+    ErrorDiffusion(OptsErrorDiffusion),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -62,6 +65,12 @@ struct OptsPalette {
 #[argh(subcommand, name = "randdither")]
 /// rendu de l’image par tramage aléatoire.
 struct OptsRandDither{}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "errordiffusion")]
+/// rendu de l’image par diffusion d'erreurs.
+struct OptsErrorDiffusion{}
+
 
 // Question 8
 fn parse_color(color: &str) -> Rgb<u8> {
@@ -99,6 +108,50 @@ fn apply_palette(image: &RgbImage, palette: &[(u8, u8, u8)]) -> RgbImage {
     new_image
 }
 
+
+
+/// Applique la diffusion d'erreurs (Error Diffusion) à une image.
+fn apply_error_diffusion(image: &RgbImage) -> RgbImage {
+    let width = image.width();
+    let height = image.height();
+    let mut new_image = image.clone();
+    let mut error_buffer: Vec<Vec<f64>> = vec![vec![0.0; width as usize]; height as usize];
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = new_image.get_pixel(x, y);
+            let luminance = 0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64;
+
+            // Ajouter l'erreur accumulée
+            let adjusted_luminance = luminance / 255.0 + error_buffer[y as usize][x as usize];
+            let new_color = if adjusted_luminance >= 0.5 { 1.0 } else { 0.0 };
+            let error = adjusted_luminance - new_color;
+
+            // Appliquer la couleur quantifiée
+            let quantized_color = (new_color * 255.0) as u8;
+            new_image.put_pixel(x, y, Rgb([quantized_color, quantized_color, quantized_color]));
+
+            // Diffuser l'erreur
+            if x + 1 < width {
+                error_buffer[y as usize][(x + 1) as usize] += error * 7.0 / 16.0;
+            }
+            if y + 1 < height {
+                if x > 0 {
+                    error_buffer[(y + 1) as usize][(x - 1) as usize] += error * 3.0 / 16.0;
+                }
+                error_buffer[(y + 1) as usize][x as usize] += error * 5.0 / 16.0;
+                if x + 1 < width {
+                    error_buffer[(y + 1) as usize][(x + 1) as usize] += error * 1.0 / 16.0;
+                }
+            }
+        }
+    }
+
+    new_image
+}
+
+
+
 // Question 15
 fn generate_bayer_matrix(order: u32) -> Vec<Vec<u8>> {
     if order == 0 {
@@ -130,7 +183,7 @@ fn apply_bayer_dithering(image: &RgbImage, order: u32) -> RgbImage {
 
     for (x, y, pixel) in image.enumerate_pixels() {
         let luminance = 0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64;
-        let threshold = bayer_matrix[(x as usize % matrix_size)][(y as usize % matrix_size)] as f64 / (matrix_size * matrix_size) as f64 * 255.0;
+        let threshold = bayer_matrix[x as usize % matrix_size][y as usize % matrix_size] as f64 / (matrix_size * matrix_size) as f64 * 255.0;
         if luminance > threshold {
             new_image.put_pixel(x, y, Rgb([255, 255, 255]));
         } else {
@@ -193,9 +246,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             dithered_image.save("./image/output_Q12.png")?;
+        },
+        Mode::ErrorDiffusion(_) => {
+            // Diffusion d'erreurs
+            let diffused_image = apply_error_diffusion(&rgb_image);
+            if let Some(output) = args.output {
+                diffused_image.save(output)?;
+            } else {
+                diffused_image.save("./image/Question16.png")?;
+            }
         }
     }
-
     Ok(())
 
 // Question 4 :
