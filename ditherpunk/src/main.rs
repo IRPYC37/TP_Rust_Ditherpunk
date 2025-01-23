@@ -23,15 +23,20 @@ struct DitherArgs {
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand)]
 enum Mode {
-    /// Mode de rendu monochrome par seuillage.
+    /// mode de rendu monochrome par seuillage.
     Seuil(OptsSeuil),
-    /// Mode de réduction à une palette de couleurs.
+    /// mode de réduction à une palette de couleurs.
     Palette(OptsPalette),
+    /// mode de rendu monochrome par tramage aléatoire.
+    RandDither(OptsRandDither),
+
+    /// mode de rendu par diffusion d'erreurs.
+    ErrorDiffusion(OptsErrorDiffusion),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "seuil")]
-/// Rendu de l’image par seuillage monochrome.
+/// rendu de l’image par seuillage monochrome.
 struct OptsSeuil {
     /// couleur pour les pixels sombres (format R,G,B)
     #[argh(option, default = "String::from(\"0,0,0\")")]
@@ -40,16 +45,42 @@ struct OptsSeuil {
     /// couleur pour les pixels clairs (format R,G,B)
     #[argh(option, default = "String::from(\"255,255,255\")")]
     light_color: String,
+
+    /// ordre de la matrice de Bayer pour le tramage
+    #[argh(option, default = "2")]
+    bayer_order: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "palette")]
-/// Rendu de l’image avec une palette contenant un nombre limité de couleurs.
+/// rendu de l’image avec une palette contenant un nombre limité de couleurs.
 struct OptsPalette {
-    /// le nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, ROUGE, VERT, BLEU, JAUNE, CYAN, MAGENTA]
+    /// nombre de couleurs à utiliser, dans la liste [NOIR, BLANC, etc.]
     #[argh(option)]
     n_couleurs: usize,
 }
+
+// Question 12
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "randdither")]
+/// rendu de l’image par tramage aléatoire.
+struct OptsRandDither{}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "errordiffusion")]
+/// rendu de l’image par diffusion d'erreurs.
+struct OptsErrorDiffusion{}
+
+
+// Question 8
+fn parse_color(color: &str) -> Rgb<u8> {
+    let parts: Vec<u8> = color.split(',')
+        .map(|s| s.parse().unwrap_or(0))
+        .collect();
+    Rgb([parts[0], parts[1], parts[2]])
+}
+
+// Question 9
 
 fn distance(c1: (u8, u8, u8), c2: (u8, u8, u8)) -> f64 {
     let (r1, g1, b1) = c1;
@@ -57,6 +88,7 @@ fn distance(c1: (u8, u8, u8), c2: (u8, u8, u8)) -> f64 {
     (((r1 as f64 - r2 as f64).powi(2) + (g1 as f64 - g2 as f64).powi(2) + (b1 as f64 - b2 as f64).powi(2)) as f64).sqrt()
 }
 
+// Question 10
 fn apply_palette(image: &RgbImage, palette: &[(u8, u8, u8)]) -> RgbImage {
     let mut new_image = RgbImage::new(image.width(), image.height());
 
@@ -76,11 +108,90 @@ fn apply_palette(image: &RgbImage, palette: &[(u8, u8, u8)]) -> RgbImage {
     new_image
 }
 
-fn parse_color(color: &str) -> Rgb<u8> {
-    let parts: Vec<u8> = color.split(',')
-        .map(|s| s.parse().unwrap_or(0))
-        .collect();
-    Rgb([parts[0], parts[1], parts[2]])
+
+
+/// Applique la diffusion d'erreurs (Error Diffusion) à une image.
+fn apply_error_diffusion(image: &RgbImage) -> RgbImage {
+    let width = image.width();
+    let height = image.height();
+    let mut new_image = image.clone();
+    let mut error_buffer: Vec<Vec<f64>> = vec![vec![0.0; width as usize]; height as usize];
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = new_image.get_pixel(x, y);
+            let luminance = 0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64;
+
+            // Ajouter l'erreur accumulée
+            let adjusted_luminance = luminance / 255.0 + error_buffer[y as usize][x as usize];
+            let new_color = if adjusted_luminance >= 0.5 { 1.0 } else { 0.0 };
+            let error = adjusted_luminance - new_color;
+
+            // Appliquer la couleur quantifiée
+            let quantized_color = (new_color * 255.0) as u8;
+            new_image.put_pixel(x, y, Rgb([quantized_color, quantized_color, quantized_color]));
+
+            // Diffuser l'erreur
+            if x + 1 < width {
+                error_buffer[y as usize][(x + 1) as usize] += error * 7.0 / 16.0;
+            }
+            if y + 1 < height {
+                if x > 0 {
+                    error_buffer[(y + 1) as usize][(x - 1) as usize] += error * 3.0 / 16.0;
+                }
+                error_buffer[(y + 1) as usize][x as usize] += error * 5.0 / 16.0;
+                if x + 1 < width {
+                    error_buffer[(y + 1) as usize][(x + 1) as usize] += error * 1.0 / 16.0;
+                }
+            }
+        }
+    }
+
+    new_image
+}
+
+
+
+// Question 15
+fn generate_bayer_matrix(order: u32) -> Vec<Vec<u8>> {
+    if order == 0 {
+        return vec![vec![0]];
+    }
+
+    let prev_matrix = generate_bayer_matrix(order - 1);
+    let size = prev_matrix.len();
+    let new_size = size * 2;
+    let mut matrix = vec![vec![0; new_size]; new_size];
+
+    for i in 0..size {
+        for j in 0..size {
+            let value = prev_matrix[i][j];
+            matrix[i][j] = value * 4;
+            matrix[i + size][j] = value * 4 + 2;
+            matrix[i][j + size] = value * 4 + 3;
+            matrix[i + size][j + size] = value * 4 + 1;
+        }
+    }
+
+    matrix
+}
+// Question 15
+fn apply_bayer_dithering(image: &RgbImage, order: u32) -> RgbImage {
+    let bayer_matrix = generate_bayer_matrix(order);
+    let matrix_size = bayer_matrix.len();
+    let mut new_image = RgbImage::new(image.width(), image.height());
+
+    for (x, y, pixel) in image.enumerate_pixels() {
+        let luminance = 0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64;
+        let threshold = bayer_matrix[x as usize % matrix_size][y as usize % matrix_size] as f64 / (matrix_size * matrix_size) as f64 * 255.0;
+        if luminance > threshold {
+            new_image.put_pixel(x, y, Rgb([255, 255, 255]));
+        } else {
+            new_image.put_pixel(x, y, Rgb([0, 0, 0]));
+        }
+    }
+
+    new_image
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -91,8 +202,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match args.mode {
         Mode::Seuil(opts) => {
-
-            // Seuillage en monochrome avec couleurs personnalisées, questions 7-8
+            // Seuillage en monochrome avec couleurs personnalisées
             let dark_color = parse_color(&opts.dark_color);
             let light_color = parse_color(&opts.light_color);
             let mut threshold_image = rgb_image.clone();
@@ -105,8 +215,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             threshold_image.save("./image/Question8.png")?;
+
+            // Tramage par matrice de Bayer
+            let bayer_image = apply_bayer_dithering(&rgb_image, opts.bayer_order);
+            bayer_image.save("./image/Question15.png")?;
         },
-        // Question 10
         Mode::Palette(opts) => {
             let palette = vec![
                 (0, 0, 0), (255, 255, 255), (255, 0, 0), (0, 255, 0),
@@ -118,11 +231,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 new_image.save("./image/Question10.png")?;
             }
+        },
+        Mode::RandDither(_) => {
+            // Tramage aléatoire
+            let mut rng = rand::thread_rng();
+            let mut dithered_image = rgb_image.clone();
+            for pixel in dithered_image.pixels_mut() {
+                let lumi = (pixel[0] as u32 + pixel[1] as u32 + pixel[2] as u32) as f64 / 3.0 / 255.0;
+                let rdm_seuil = rng.gen::<f64>();
+                if lumi > rdm_seuil {
+                    *pixel = Rgb([255, 255, 255]);
+                } else {
+                    *pixel = Rgb([0, 0, 0]);
+                }
+            }
+            dithered_image.save("./image/output_Q12.png")?;
+        },
+        Mode::ErrorDiffusion(_) => {
+            // Diffusion d'erreurs
+            let diffused_image = apply_error_diffusion(&rgb_image);
+            if let Some(output) = args.output {
+                diffused_image.save(output)?;
+            } else {
+                diffused_image.save("./image/Question16.png")?;
+            }
         }
     }
-
     Ok(())
-}
 
 // Question 4 :
     //
@@ -210,4 +345,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //Ok(())
 
 }
-
