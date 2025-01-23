@@ -174,10 +174,12 @@ cargo run -- image/iut.jpg randdither
 
 ![image](/ditherpunk/image/output_Q12.png)
 
-
 ### Question 15 - Implementation de la matrice de Bayer
 
+```bash
 cargo run -- image/iut.jpg seuil --bayer-order 3
+```
+
 **Image d'origine :**
 
 ![image](/ditherpunk/image/iut.jpg)
@@ -188,7 +190,10 @@ cargo run -- image/iut.jpg seuil --bayer-order 3
 
 ### Question 16 - Implementation de l'erreur de diffusion (noir et blanc)
 
+```bash
 cargo run -- image/iut.jpg errordiffusion
+```
+
 **Image d'origine :**
 
 ![image](/ditherpunk/image/iut.jpg)
